@@ -1,0 +1,9 @@
+# Emacs artifacts
+*~
+.tramp_history
+
+# Ansible variable and runtime resources
+inventory.cfg
+vars.yml
+secrets.yml
+*.retry
