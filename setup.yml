@@ -4,6 +4,36 @@
   remote_user: root
   tasks:
 
+    - name: Register RHEL hosts to RHN
+      redhat_subscription:
+        username: "{{ rhn_user }}"
+        password: "{{ rhn_pass }}"
+      when: ansible_distribution == "RedHat"
+      register: rhn_registration
+      ignore_errors: yes
+
+    - name: Attach subscription pool
+      command: subscription-manager attach --pool={{ rhn_pool }}
+      when: rhn_registration.changed
+
+    - name: Disable default repos
+      command: subscription-manager repos --disable=*
+      when: rhn_registration.changed
+
+    - name: Enable RHEL server repos
+      command: >
+        subscription-manager repos
+        --enable=rhel-{{ ansible_distribution_major_version }}-server-rpms
+      when: rhn_registration.changed
+
+    - name: Install required packages on RHEL6 hosts
+      yum:
+        name: libselinux-python
+        state: installed
+      when:
+        - ansible_distribution == "RedHat"
+        - ansible_distribution_major_version == "6"
+
     - name: Configure sudo access for wheel group
       copy:
         content: "%wheel ALL=(ALL) NOPASSWD: ALL"
@@ -34,30 +64,4 @@
         owner: "{{ user }}"
         group: "{{ user }}"
         mode: 0644
-
-- name: Configure RHN subscriptions
-  hosts: rhel
-  become: yes
-  tasks:
-
-    - name: Register RHEL hosts to RHN
-      redhat_subscription:
-        username: "{{ rhn_user }}"
-        password: "{{ rhn_pass }}"
-      when: ansible_distribution == "RedHat"
-      register: rhn_registration
-
-    - name: Attach subscription pool
-      command: subscription-manager attach --pool={{ rhn_pool }}
-      when: rhn_registration.changed
-
-    - name: Disable default repos
-      command: subscription-manager repos --disable=*
-      when: rhn_registration.changed
-
-    - name: Enable RHEL server repos
-      command: >
-        subscription-manager repos
-        --enable=rhel-{{ ansible_distribution_major_version }}-server-rpms
-      when: rhn_registration.changed
 ...
