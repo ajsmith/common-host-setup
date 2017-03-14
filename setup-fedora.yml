@@ -1,0 +1,39 @@
+---
+- name: Configure hosts to my liking
+  hosts: fedora
+  remote_user: root
+  vars:
+    user: "{{ ansible_user }}"
+    user_home: "/home/{{ user }}"
+  tasks:
+
+    - name: Configure sudo access for wheel group
+      copy:
+        content: "%wheel ALL=(ALL) NOPASSWD: ALL"
+        dest: /etc/sudoers.d/local
+        owner: root
+        group: root
+        mode: 0440
+
+    - name: Add my user
+      user:
+        name: "{{ user }}"
+        groups: wheel
+        state: present
+
+    - name: Add SSH directory
+      file:
+        path: /home/{{ user }}/.ssh
+        state: directory
+        owner: "{{ user }}"
+        group: "{{ user }}"
+        mode: 0700
+
+    - name: Add SSH authorized_keys
+      copy:
+        content: "{{ authorized_keys }}"
+        dest: /home/{{ user }}/.ssh/authorized_keys
+        owner: "{{ user }}"
+        group: "{{ user }}"
+        mode: 0644
+...
