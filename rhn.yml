@@ -2,9 +2,6 @@
 - name: Configure hosts to my liking
   hosts: rhel
   remote_user: root
-  vars:
-    user: "{{ ansible_user }}"
-    user_home: "/home/{{ user }}"
   tasks:
 
     - name: Register RHEL hosts to RHN
@@ -36,35 +33,4 @@
       when:
         - ansible_distribution == "RedHat"
         - ansible_distribution_major_version == "6"
-
-    - name: Configure sudo access for wheel group
-      copy:
-        content: "%wheel ALL=(ALL) NOPASSWD: ALL"
-        dest: /etc/sudoers.d/local
-        owner: root
-        group: root
-        mode: 0440
-
-    - name: Add my user
-      user:
-        name: "{{ user }}"
-        password: "{{ crypted_password }}"
-        groups: wheel
-        state: present
-
-    - name: Add SSH directory
-      file:
-        path: "{{ user_home }}/.ssh"
-        state: directory
-        owner: "{{ user }}"
-        group: "{{ user }}"
-        mode: 0700
-
-    - name: Add SSH authorized_keys
-      copy:
-        content: "{{ authorized_keys }}"
-        dest: "{{ user_home }}/.ssh/authorized_keys"
-        owner: "{{ user }}"
-        group: "{{ user }}"
-        mode: 0644
 ...
