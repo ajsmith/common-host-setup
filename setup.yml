@@ -1,7 +1,10 @@
 ---
 - name: Configure hosts to my liking
-  hosts: all
+  hosts: rhel
   remote_user: root
+  vars:
+    user: "{{ ansible_user }}"
+    user_home: "/home/{{ user }}"
   tasks:
 
     - name: Register RHEL hosts to RHN
@@ -51,7 +54,7 @@
 
     - name: Add SSH directory
       file:
-        path: /home/{{ user }}/.ssh
+        path: "{{ user_home }}/.ssh"
         state: directory
         owner: "{{ user }}"
         group: "{{ user }}"
@@ -59,8 +62,8 @@
 
     - name: Add SSH authorized_keys
       copy:
-        src: "{{ ssh_pub_key_file }}"
-        dest: /home/{{ user }}/.ssh/authorized_keys
+        content: "{{ authorized_keys }}"
+        dest: "{{ user_home }}/.ssh/authorized_keys"
         owner: "{{ user }}"
         group: "{{ user }}"
         mode: 0644
